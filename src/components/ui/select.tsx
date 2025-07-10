@@ -8,17 +8,15 @@ export function Select({
   onValueChange?: (value: string) => void;
 }) {
   return (
-    <div className="relative">
-      {React.Children.map(children, (child) => {
-        if (
-          React.isValidElement(child) &&
-          child.type === SelectContent
-        ) {
-          // Only pass onValueChange into SelectContent so it can handle it
-          return React.cloneElement(child, { onValueChange });
+    <div
+      className="relative"
+      onClick={() => {
+        if (onValueChange) {
+          onValueChange("PlaceholderDoctor");
         }
-        return child;
-      })}
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -49,7 +47,19 @@ export function SelectContent({
           React.isValidElement(child) &&
           child.type === SelectItem
         ) {
-          return React.cloneElement(child, { onValueChange });
+          const typedChild = child as React.ReactElement<{
+            value: string;
+            onClick?: () => void;
+          }>;
+
+          const value = typedChild.props.value;
+
+          return React.cloneElement(typedChild, {
+            onClick: () => {
+              typedChild.props.onClick?.();
+              onValueChange?.(value);
+            },
+          });
         }
         return child;
       })}
@@ -61,21 +71,15 @@ export function SelectItem({
   value,
   children,
   onClick,
-  onValueChange,
 }: {
   value: string;
   children: React.ReactNode;
   onClick?: () => void;
-  onValueChange?: (value: string) => void;
 }) {
-  const handleClick = () => {
-    onValueChange?.(value);
-    onClick?.();
-  };
-
   return (
     <li
-      onClick={handleClick}
+      onClick={onClick}
+      data-value={value} // 👈 this line makes use of "value"
       className="px-4 py-2 hover:bg-blue-100 cursor-pointer"
     >
       {children}
